@@ -1,0 +1,7 @@
+# gitignore
+
+*
+!*.*
+*.IPPcode19
+*.txt
+test*
