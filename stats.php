@@ -1,12 +1,14 @@
 <?php
 
 class Stats {
+    private $select;
     private $loc;
     private $comments;
     private $labels;
     private $jumps;
 
-    public function __construct($loc=0, $comments=0, $labels=0, $jumps=0) {
+    public function __construct($select, $loc=0, $comments=0, $labels=0, $jumps=0) {
+        $this->select = $select;
         $this->loc = $loc;
         $this->comments = $comments;
         $this->labels = $labels;
@@ -22,15 +24,22 @@ class Stats {
 
         if ($instruct == 'LABEL')      
             $this->labels++;
-        elseif (strpos($instruct, 'JUMP') !== FALSE)
+        elseif (strpos($instruct, 'JUMP') !== false)
             $this->jumps++;
     }
 
     public function str() {
-        return  "loc:\t$this->loc\n" .
-                "comms:\t$this->comments\n" .
-                "labels:\t$this->labels\n" .
-                "jumps:\t$this->jumps\n";
+        $string = '';
+        if (in_array('loc', $this->select))
+            $string .= "$this->loc\n";
+        if (in_array('comments', $this->select))
+            $string .= "$this->comments\n";
+        if (in_array('labels', $this->select))
+            $string .= "$this->labels\n";
+        if (in_array('jumps', $this->select))
+            $string .= "$this->jumps\n";
+
+        return $string;
     }
 
     public function __get($attr) {
@@ -39,17 +48,45 @@ class Stats {
     }
 }
 
-class XMLcreator {
+function replace_amp($string) {
+    return str_replace('&', '&amp;', $string);
+}
+
+class XMLCreator {
     private $ins_cnt;
-    private $DOM;
+    public $DOM;
+    public $root;
 
     public function __construct() {
         $this->ins_cnt = 0;
+
         $this->DOM = new DOMDocument('1.0', 'UTF-8');
         $this->DOM->formatOutput = true;
-        $progXML = $this->DOM->createElement('program');
-        $progXML->setAttribute('language', 'IPPcode19');
-        $this->DOM->appendChild($progXML);
+
+        $this->root = $this->DOM->createElement('program');
+        $this->root->setAttribute('language', 'IPPcode19');
+        $this->DOM->appendChild($this->root);
+    }
+
+    public function addInstruction($opcode) {
+        $this->ins_cnt++;
+
+        $instructXML = $this->DOM->createElement('instruction');
+        $instructXML->setAttribute('order', $this->ins_cnt);
+        $instructXML->setAttribute('opcode', $opcode);
+        $this->root->appendChild($instructXML);
+        return $instructXML;
+    }
+
+    public function addArgument($instructXML, $number, $type, $value) {
+        $argXML = $this->DOM->createElement('arg'.$number, replace_amp($value));
+        $argXML->setAttribute('type', $type);
+        $instructXML->appendChild($argXML);
+        return $argXML;
+    }
+
+    public function str() {
+        return $this->DOM->saveXML();
     }
 }
 
