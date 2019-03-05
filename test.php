@@ -84,6 +84,10 @@ foreach ($files as $file) {
         array_push($src_files, $file->getPathname());
 }
 
+$diff_file = './diffs.xml';
+$fr = fopen($diff_file, 'w');
+fclose($fr);
+
 foreach ($src_files as $src_file) {
     $nosuffix_file = substr($src_file, 0, -4);
     $in_file = $nosuffix_file . '.in';
@@ -98,7 +102,7 @@ foreach ($src_files as $src_file) {
     
     $actual_out_file = $nosuffix_file . '.actout';
     $call = "php7.3 $parse_script <$src_file >$actual_out_file";
-    //echo "call: $call\n";
+    echo "call: $src_file\n";
     exec($call, $output, $ret_code);
     
     $fr = fopen($rc_file, 'r');
@@ -107,8 +111,9 @@ foreach ($src_files as $src_file) {
     fclose($fr);
 
     if ($ret_code == $expected_ret_code) {
-        exec("diff $actual_out_file $out_file >/dev/null", $output, $diff_code);
-        echo "diff ret code: $diff_code\n";
+        exec("java -jar /pub/courses/ipp/jexamxml/jexamxml.jar $actual_out_file $out_file $diff_file /D /pub/courses/ipp/jexamxml/options", $output, $diff_code);
+        echo "jexamxml ret code: $diff_code\n";
+	exec("cat $diff_file");
     } else {
         echo "return codes are not same\n";
     }
