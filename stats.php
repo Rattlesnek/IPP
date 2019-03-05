@@ -30,15 +30,16 @@ class Stats {
 
     public function str() {
         $string = '';
-        if (in_array('loc', $this->select))
-            $string .= "$this->loc\n";
-        if (in_array('comments', $this->select))
-            $string .= "$this->comments\n";
-        if (in_array('labels', $this->select))
-            $string .= "$this->labels\n";
-        if (in_array('jumps', $this->select))
-            $string .= "$this->jumps\n";
-
+        foreach ($this->select as $sel) {
+            if ('loc' == $sel)
+                $string .= "$this->loc\n";
+            elseif ('comments' == $sel)
+                $string .= "$this->comments\n";
+            elseif ('labels' == $sel)
+                $string .= "$this->labels\n";
+            elseif ('jumps' == $sel)
+                $string .= "$this->jumps\n";
+        }
         return $string;
     }
 

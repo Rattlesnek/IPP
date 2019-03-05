@@ -89,9 +89,14 @@ function handle_options($opt) {
     }
 }
 
-function check_header($line) {
-    if ($line == '' or rtrim($line) != '.IPPcode19')
+function check_header($line, $stats) {
+    $comment_parts = preg_split('/#/', $line);
+    if (count($comment_parts) > 1) {
+        $stats->incComments();
+    }
+    if (rtrim($comment_parts[0]) != '.IPPcode19') {
         error("ERROR: wrong file header!\n", ERR_HEAD);
+    }
 }
 
 const SHORT_OPTS = 'hs:lcbj';
@@ -113,7 +118,7 @@ $XML = new XMLCreator();
 $stats = new Stats($keys);
 
 $line = fgets(STDIN);
-check_header($line);
+check_header($line, $stats);
 
 // MAIN LOOP
 while ($line = fgets(STDIN)) {
