@@ -5,6 +5,11 @@ const ERR_INFILE = 11;
 const ERR_OUTFILE = 12;
 const ERR_INTER = 99;
 
+const GREEN = "\e[0;32m";
+const YELLOW = "\e[1;33m";
+const RED = "\e[0;31m";
+const TRAIL = "\e[0m";
+
 function error($error_string, $ret_code) {
     fprintf(STDERR, $error_string);
     exit($ret_code);
@@ -37,6 +42,14 @@ $int_script = './interpret.py';
 $parse_only = false;
 $int_only = false;
 
+$jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
+// TODO
+//$jexamxml = './jexamxml/jexamxml.jar';
+
+$jexamxml_opt = '/pub/courses/ipp/jexamxml/options';
+// TODO
+//$jexamxml_opt = './jexamxml/options';
+
 $opt = getopt(SHORT_OPTS, LONG_OPTS);
 if (array_key_exists('help', $opt))
     help(); 
@@ -60,7 +73,7 @@ if (array_key_exists('int-only', $opt)) {
 }
 
 if (! is_dir($dir))
-    error("ERROR: wrong path to directory\n", ERR_PARAM);
+    error("ERROR: wrong path to directory $dir\n", ERR_PARAM);
 if (! file_exists($parse_script) and $int_only == false) 
     error("ERROR: $parse_script does not exist\n", ERR_INFILE);
 if (! file_exists($int_script) and $parse_only == false) 
@@ -86,6 +99,7 @@ foreach ($files as $file) {
 
 $diff_file = './diffs.xml';
 $fr = fopen($diff_file, 'w');
+// TODO
 fclose($fr);
 
 foreach ($src_files as $src_file) {
@@ -102,22 +116,33 @@ foreach ($src_files as $src_file) {
     
     $actual_out_file = $nosuffix_file . '.actout';
     $call = "php7.3 $parse_script <$src_file >$actual_out_file";
+    
     echo "call: $src_file\n";
-    exec($call, $output, $ret_code);
+    exec($call, $output, $actual_ret_code);
     
     $fr = fopen($rc_file, 'r');
     // TODO
     $expected_ret_code = (int) trim(fgets($fr));
     fclose($fr);
 
-    if ($ret_code == $expected_ret_code) {
-        exec("java -jar /pub/courses/ipp/jexamxml/jexamxml.jar $actual_out_file $out_file $diff_file /D /pub/courses/ipp/jexamxml/options", $output, $diff_code);
-        echo "jexamxml ret code: $diff_code\n";
-	exec("cat $diff_file");
+
+    if ($actual_ret_code == $expected_ret_code) {
+        if ($actual_ret_code == 0) {
+            exec("java -jar $jexamxml $actual_out_file $out_file $diff_file /D $jexamxml_opt", $output, $diff_code);
+            if ($diff_code == 0) {
+                echo GREEN . " ... SUCCESS -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL;
+            } else {
+                echo RED . " ... JExamXML FAIL\n" . TRAIL;
+            }
+        
+            exec("cat $diff_file");
+        } else {
+            echo GREEN . " ... SUCCESS -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL;
+        }
     } else {
-        echo "return codes are not same\n";
+        echo RED . " ... RC comparison FAIL -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL;
     }
 }
     
-
+echo "\n\n\n========================================================\n\n\n"
 ?>

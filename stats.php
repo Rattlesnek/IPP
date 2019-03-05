@@ -1,4 +1,23 @@
 <?php
+/**********************************************************************
+
+  FileName    [stats.php]
+
+  SystemName  [IPP - Interpreter]
+
+  PackageName [Statistics and XML classes]
+
+  Author      [Adam Pankuch]
+
+  Login       [xpanku00]
+
+  Date        [5/3/2019]
+
+***********************************************************************/
+
+////////////////////////////////////////////////////////////////////////
+///                             CLASSES                              ///
+////////////////////////////////////////////////////////////////////////
 
 class Stats {
     private $select;
@@ -15,10 +34,17 @@ class Stats {
         $this->jumps = $jumps;
     }
 
+    /**
+     * Method increments number of comments
+     */
     public function incComments() {
         $this->comments++;
     }
 
+    /**
+     * Method increments instruction counters based on opcode
+     * @param $instruct     opcode of instruction
+     */
     public function incInstructs($instruct) {
         $this->loc++;
 
@@ -28,6 +54,9 @@ class Stats {
             $this->jumps++;
     }
 
+    /**
+     * Method returns string of statistics based on selected statistics in select
+     */
     public function str() {
         $string = '';
         foreach ($this->select as $sel) {
@@ -49,9 +78,15 @@ class Stats {
     }
 }
 
+
+/**
+ * Function replaces all amperants in string to be usable in XML
+ * @param $string   string 
+ */
 function replace_amp($string) {
     return str_replace('&', '&amp;', $string);
 }
+
 
 class XMLCreator {
     private $ins_cnt;
@@ -69,6 +104,10 @@ class XMLCreator {
         $this->DOM->appendChild($this->root);
     }
 
+    /**
+     * Method adds instruction to XML and returns its handle
+     * @param $opcode   opcode of instruction
+     */
     public function addInstruction($opcode) {
         $this->ins_cnt++;
 
@@ -79,6 +118,13 @@ class XMLCreator {
         return $instructXML;
     }
 
+    /**
+     * Method adds argument to instruction in XML and returns its handle
+     * @param $instructXML  handle of instruciton where argument will be added
+     * @param $number       number of argument
+     * @param $type         type of argument
+     * @param $value        value of argument
+     */
     public function addArgument($instructXML, $number, $type, $value) {
         $argXML = $this->DOM->createElement('arg'.$number, replace_amp($value));
         $argXML->setAttribute('type', $type);
@@ -86,6 +132,9 @@ class XMLCreator {
         return $argXML;
     }
 
+    /**
+     * Method returns XML as string
+     */
     public function str() {
         return $this->DOM->saveXML();
     }

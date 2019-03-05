@@ -7,4 +7,6 @@
 
 *.log
 *.xml
+jexamxml/*
+ref_tests/*
 
