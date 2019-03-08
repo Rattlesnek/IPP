@@ -7,6 +7,7 @@
 
 *.log
 *.xml
-jexamxml/*
-ref_tests/*
+*.zip
+*.sh
+*.html
 

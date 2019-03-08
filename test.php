@@ -1,25 +1,54 @@
 <?php
+/**********************************************************************
 
+  FileName    [test.php]
+
+  SystemName  [Tester for parse.php and interpret.py]
+
+  PackageName []
+
+  Author      [Adam Pankuch]
+
+  Login       [xpanku00]
+
+  Date        [9/3/2019]
+
+***********************************************************************/
+
+// error return codes
 const ERR_PARAM = 10;
 const ERR_INFILE = 11;
 const ERR_OUTFILE = 12;
 const ERR_INTER = 99;
-
+// color standard output
 const GREEN = "\e[0;32m";
 const YELLOW = "\e[1;33m";
 const RED = "\e[0;31m";
 const TRAIL = "\e[0m";
 
+/**
+ * Function prints error message to STDERR and then exits with return code
+ * @param $error_string     error message
+ * @param $ret_code         return code
+ */
 function error($error_string, $ret_code) {
     fprintf(STDERR, $error_string);
     exit($ret_code);
 }
 
+/**
+ * Function prints help and then exits with return code 0
+ */
 function help() {
     echo "HELP\n";   
     exit(0); 
 }
 
+/**
+ * Function creates an empty file
+ * @param $filename name of the file
+ * @param $write_zerp if true write zero to file else dont
+ */
 function create_file($filename, $write_zero=false) {
     $fw = fopen($filename, 'w');
     if (! $fw) {
@@ -31,10 +60,18 @@ function create_file($filename, $write_zero=false) {
     fclose($fw);
 }
 
+
+
+function color_text($color, $text) {
+    echo "<td> <font color=\"$color\">$text</font> <br> </td>\n</tr>\n";
+}
+
+
+
 const SHORT_OPTS = '';
 const LONG_OPTS = array('help', 'directory:', 'recursive', 'parse-script:', 'int-script:', 'parse-only', 'int-only');
 
-# default values of control variables
+// default values of control variables
 $dir = '.';
 $recursive = false;
 $parse_script = './parse.php';
@@ -42,13 +79,13 @@ $int_script = './interpret.py';
 $parse_only = false;
 $int_only = false;
 
-$jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
+//$jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
 // TODO
-//$jexamxml = './jexamxml/jexamxml.jar';
+$jexamxml = '../jexamxml/jexamxml.jar';
 
-$jexamxml_opt = '/pub/courses/ipp/jexamxml/options';
+//$jexamxml_opt = '/pub/courses/ipp/jexamxml/options';
 // TODO
-//$jexamxml_opt = './jexamxml/options';
+$jexamxml_opt = '../jexamxml/options';
 
 $opt = getopt(SHORT_OPTS, LONG_OPTS);
 if (array_key_exists('help', $opt))
@@ -84,65 +121,136 @@ $dir = realpath($dir);
 $parse_script = realpath($parse_script);
 $int_script = realpath($int_script);
 
+const HEADER = "<!DOCTYPE html>
+<html>
+<head>
+    <meta charset=\"UTF-8\">
+    <title>Page Title</title>
+</head>
+<body>
 
-if ($recursive)   
+<h1>Test.php</h1>
+";
+
+const TABLE = "<table style=\"width:60%\">
+<tr>
+    <th> <p align=\"left\">Test file</p> </th>
+    <th> <p align=\"left\">Outcome</p> </th>
+</tr>
+";
+
+const ENDING = "</table>
+</body>
+</html>
+";
+
+if ($recursive) {  
     $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir));
-else
+} else {
     $files = new DirectoryIterator($dir);
-
+}
 
 $src_files = array();
+// collect all .src files to array
 foreach ($files as $file) {
     if (preg_match('/^.+\.src$/', $file->getPathname()))
         array_push($src_files, $file->getPathname());
 }
 
+// create diff file
 $diff_file = './diffs.xml';
 $fr = fopen($diff_file, 'w');
 // TODO
 fclose($fr);
 
+// print HTML header and some info
+echo HEADER;
+if ($int_only) {
+    echo "<h2>Interpreter only</h2>\n";
+}
+if ($parse_only) {
+    echo "<h2>Parser only</h2>\n";
+}
+echo "<h2>Directory: $dir</h2>\n";
+echo TABLE;
+
+// for each .src file run test
+sort($src_files);
 foreach ($src_files as $src_file) {
     $nosuffix_file = substr($src_file, 0, -4);
+    // create files which are missing {.in, .out, .rc}
     $in_file = $nosuffix_file . '.in';
     $out_file = $nosuffix_file . '.out';
     $rc_file = $nosuffix_file . '.rc';
-    if (! file_exists($in_file))
+    $parse_out_file = $nosuffix_file . '.parseout';
+    $int_out_file = $nosuffix_file . '.intout';
+    if (! file_exists($in_file)) {
         create_file($in_file);
-    if (! file_exists($out_file))
+    }
+    if (! file_exists($out_file)) {
         create_file($out_file);
-    if (! file_exists($rc_file))
+    }
+    if (! file_exists($rc_file)) {
         create_file($rc_file, $write_zero=true);
-    
-    $actual_out_file = $nosuffix_file . '.actout';
-    $call = "php7.3 $parse_script <$src_file >$actual_out_file";
-    
-    echo "call: $src_file\n";
-    exec($call, $output, $actual_ret_code);
-    
+    }
+
+    // get expected return code value from .rc file
     $fr = fopen($rc_file, 'r');
     // TODO
     $expected_ret_code = (int) trim(fgets($fr));
     fclose($fr);
 
+    //fprintf(STDERR, "call: $src_file\n");
+    $call = str_replace($dir, "", $nosuffix_file);
+    echo "<tr>\n<td>$call</td>\n";
 
+    if (! $int_only) {
+        // PARSE execute
+        exec("php7.3 $parse_script <$src_file >$parse_out_file 2>/dev/null", $exec, $parse_ret_code);
+        $int_src_file = $parse_out_file;
+        $actual_ret_code = $parse_ret_code;
+    } else {
+        $int_src_file = $src_file;
+    }
+
+    if (! $parse_only) {
+        // INTERPRET execute
+        exec("python $int_script <$int_src_file >$int_out_file 2>/dev/null", $exec, $int_ret_code);
+        $actual_ret_code = $parse_ret_code;
+    }
+
+    // compare return codes
     if ($actual_ret_code == $expected_ret_code) {
+        // find out if error ocurred during parsing/interpretation
         if ($actual_ret_code == 0) {
-            exec("java -jar $jexamxml $actual_out_file $out_file $diff_file /D $jexamxml_opt", $output, $diff_code);
-            if ($diff_code == 0) {
-                echo GREEN . " ... SUCCESS -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL;
+            // check either output XML or ouput from interpreter
+            if ($parse_only) {
+                exec("java -jar $jexamxml $parse_out_file $out_file $diff_file /D $jexamxml_opt", $exec, $diff_code);
             } else {
-                echo RED . " ... JExamXML FAIL\n" . TRAIL;
+                exec("diff $int_out_file $out_file >$diff_file", $exec, $diff_code);
             }
-        
-            exec("cat $diff_file");
+            
+            // according to return value print success or fail
+            if ($diff_code == 0) {
+                //fprintf(STDERR, GREEN . " ... SUCCESS -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL);
+                color_text("green", "SUCCESS");
+            } else {
+                //fprintf(STDERR, RED . " ... FAIL\n" . TRAIL);
+                color_text("red", "FAIL -- different output");
+            }
         } else {
-            echo GREEN . " ... SUCCESS -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL;
+            //fprintf(STDERR, GREEN . " ... SUCCESS -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL);
+            color_text("green", "SUCCESS");
         }
     } else {
-        echo RED . " ... RC comparison FAIL -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL;
+        //fprintf(STDERR, RED . " ... RC comparison FAIL -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL);
+        color_text("red", "FAIL -- expected return code: $expected_ret_code got: $actual_ret_code");
     }
 }
+
+echo ENDING;
+
     
-echo "\n\n\n========================================================\n\n\n"
+fprintf(STDERR, "Testing finished!\n");
+
 ?>
