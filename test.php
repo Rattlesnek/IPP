@@ -49,10 +49,10 @@ function help() {
  * @param $filename name of the file
  * @param $write_zerp if true write zero to file else dont
  */
-function create_file($filename, $write_zero=false) {
+function create_file($filename, $error=ERR_INFILE, $write_zero=false) {
     $fw = fopen($filename, 'w');
     if (! $fw) {
-        error("ERROR: could not create $filename\n", ERR_OUTFILE);
+        error("ERROR: could not create $filename\n", $error);
     }
     if ($write_zero) {
         fwrite($fw, "0\n");
@@ -79,13 +79,13 @@ $int_script = './interpret.py';
 $parse_only = false;
 $int_only = false;
 
-//$jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
+$jexamxml = '/pub/courses/ipp/jexamxml/jexamxml.jar';
 // TODO
-$jexamxml = '../jexamxml/jexamxml.jar';
+//$jexamxml = '../jexamxml/jexamxml.jar';
 
-//$jexamxml_opt = '/pub/courses/ipp/jexamxml/options';
+$jexamxml_opt = '/pub/courses/ipp/jexamxml/options';
 // TODO
-$jexamxml_opt = '../jexamxml/options';
+//$jexamxml_opt = '../jexamxml/options';
 
 $opt = getopt(SHORT_OPTS, LONG_OPTS);
 if (array_key_exists('help', $opt))
@@ -132,14 +132,17 @@ const HEADER = "<!DOCTYPE html>
 <h1>Test.php</h1>
 ";
 
-const TABLE = "<table style=\"width:60%\">
+const TABLE = "
+<table style=\"width:60%\">
 <tr>
-    <th> <p align=\"left\">Test file</p> </th>
-    <th> <p align=\"left\">Outcome</p> </th>
-</tr>
+<th> <p align=\"left\">Test file</p> </th>
+<th> <p align=\"left\">Outcome</p> </th>
+</tr>\n
 ";
 
-const ENDING = "</table>
+const ENDING = "
+</table>
+
 </body>
 </html>
 ";
@@ -159,17 +162,17 @@ foreach ($files as $file) {
 
 // create diff file
 $diff_file = './diffs.xml';
-$fr = fopen($diff_file, 'w');
-// TODO
-fclose($fr);
+create_file($diff_file, $error=ERR_OUTFILE);
+$diff_file = realpath($diff_file);
 
 // print HTML header and some info
 echo HEADER;
 if ($int_only) {
     echo "<h2>Interpreter only</h2>\n";
-}
-if ($parse_only) {
+} elseif ($parse_only) {
     echo "<h2>Parser only</h2>\n";
+} else {
+    echo "<h2>Parser togheter with interpreter</h2>\n";
 }
 echo "<h2>Directory: $dir</h2>\n";
 echo TABLE;
@@ -196,7 +199,9 @@ foreach ($src_files as $src_file) {
 
     // get expected return code value from .rc file
     $fr = fopen($rc_file, 'r');
-    // TODO
+    if (! $fr) {
+        error("ERROR: could not open $rc_file\n", ERR_INFILE);
+    }
     $expected_ret_code = (int) trim(fgets($fr));
     fclose($fr);
 
@@ -215,8 +220,8 @@ foreach ($src_files as $src_file) {
 
     if (! $parse_only) {
         // INTERPRET execute
-        exec("python $int_script <$int_src_file >$int_out_file 2>/dev/null", $exec, $int_ret_code);
-        $actual_ret_code = $parse_ret_code;
+        exec("python $int_script --input=$in_file <$int_src_file >$int_out_file 2>/dev/null", $exec, $int_ret_code);
+        $actual_ret_code = $int_ret_code;
     }
 
     // compare return codes
@@ -226,8 +231,10 @@ foreach ($src_files as $src_file) {
             // check either output XML or ouput from interpreter
             if ($parse_only) {
                 exec("java -jar $jexamxml $parse_out_file $out_file $diff_file /D $jexamxml_opt", $exec, $diff_code);
+                //fprintf(STDERR, "jexamxml\n");
             } else {
                 exec("diff $int_out_file $out_file >$diff_file", $exec, $diff_code);
+                //fprintf(STDERR, "diff\n");
             }
             
             // according to return value print success or fail
@@ -246,11 +253,21 @@ foreach ($src_files as $src_file) {
         //fprintf(STDERR, RED . " ... RC comparison FAIL -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL);
         color_text("red", "FAIL -- expected return code: $expected_ret_code got: $actual_ret_code");
     }
+
+    if ($parse_only) {
+        unlink($parse_out_file);
+    } elseif ($int_only) {
+        unlink($int_out_file);
+    } else {
+        unlink($parse_out_file);
+        unlink($int_out_file);
+    }
 }
 
 echo ENDING;
 
-    
+unlink($diff_file);
+
 fprintf(STDERR, "Testing finished!\n");
 
 ?>
