@@ -15,6 +15,7 @@
 
 ***********************************************************************/
 
+include 'gen_xml.php';
 include 'stats.php';
 
 ////////////////////////////////////////////////////////////////////////
@@ -52,7 +53,7 @@ const instructions = array(
     'OR'            => 'var symb symb',
     'NOT'           => 'var symb',
     'INT2CHAR'      => 'var symb',
-    'STRI2INT'       => 'var symb symb',
+    'STRI2INT'      => 'var symb symb',
 /**/'READ'          => 'var type',
     'WRITE'         => 'symb',
 /**/'CONCAT'        => 'var symb symb',
@@ -69,7 +70,7 @@ const instructions = array(
     'BREAK'         => ''
 );
 
-// array contains type of operand (key) and corresponding regexes (value)
+// array contains type of operand (key) and index of corresponding regexes (value)
 const operands = array(
     'var'   => [0],
     'symb'  => [0, 1, 2, 3, 4],
@@ -110,25 +111,40 @@ function error($error_string, $ret_code) {
  * Function prints help and then exits with return code 0
  */
 function help() {
-    echo "HELP\n";   
+    echo "usage: test.php [--help] [--stats FILE]\n"
+        ."                [--loc, --comments, --labels, --jumps]\n\n"
+        ."optional arguments:\n"
+        ."  --help          show this help message and exit\n"
+        ."  --stats FILE    output file with collected statistics\n"
+        ."  --loc           statistics - count number of lines of code\n"
+        ."  --comments      statistics - count number of comments\n"
+        ."  --labels        statistics - count number of specific labels\n"
+        ."  --jumps         statistics - count number of jump instructions\n";
     exit(0); 
 }
 
 /**
- * Function handles command line arguments of script
+ * Function handles command line arguments of script for statistics
  * @param $opt  command line arguments
  */
-function handle_options($opt) {
-    if (array_key_exists('help', $opt) or array_key_exists('h', $opt)) {
-        help();
-    } elseif (array_key_exists('stats', $opt)) {
-        return true;
+function handle_stat_options($opt) {
+    $keys = array_keys($opt);
+
+    if (array_key_exists('stats', $opt)) {
+        // open file for statistics
+        $stat_file = fopen($opt['stats'], 'w');
+        if (! $stat_file) {
+            error("ERROR: ".$e."\n", ERR_OUTFILE);
+        }
+        $keys = array_diff($keys, ['stats']);
     } elseif (array_key_exists('loc', $opt) or array_key_exists('comments', $opt) or
               array_key_exists('labels', $opt) or array_key_exists('jumps', $opt)) {
-        error("ERROR: param --stats=file is missing!\n", ERR_PARAM);
+        error("ERROR: argument [--stats FILE] is missing!\n", ERR_PARAM);
     } else {
-        return false;
+        $keys = array();
     }
+
+    return $keys; // array containing selected statistics
 }
 
 /**
@@ -151,20 +167,14 @@ function check_header($line, $stats) {
 ////////////////////////////////////////////////////////////////////////
 
 // handle command line arguments
-const SHORT_OPTS = 'hs:lcbj';
+const SHORT_OPTS = 'h';
 const LONG_OPTS = array('help', 'stats:', 'loc', 'comments', 'labels', 'jumps');
 $opt = getopt(SHORT_OPTS, LONG_OPTS);
-$enable_stats = handle_options($opt);
 
-$keys = array_keys($opt);
-if ($enable_stats) {
-    // open file for statistics
-    $stat_file = fopen($opt['stats'], 'w');
-    if (! $stat_file) {
-        error("ERROR: ".$e."\n", ERR_OUTFILE);
-    }
-    $keys = array_diff($keys, ['stats']);
+if (array_key_exists('help', $opt) or array_key_exists('h', $opt)) {
+    help();
 }
+$keys = handle_stat_options($opt);
 
 // create XML and statistics
 $XML = new XMLCreator();
@@ -192,7 +202,7 @@ while ($line = fgets(STDIN)) {
 
     // check if instruction exist
     if (array_key_exists($opcode, instructions)) {
-        $stats->incInstructs($opcode);
+        $stats->incInstructs($opcode, $parts);
         $instructXML = $XML->addInstruction($opcode);
 
         $inst_operands = explode(' ', instructions[$opcode]);

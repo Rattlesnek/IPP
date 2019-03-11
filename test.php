@@ -60,12 +60,14 @@ function create_file($filename, $error=ERR_INFILE, $write_zero=false) {
     fclose($fw);
 }
 
-
-
+/**
+ * Function prints html colored text
+ * @param $color    color string
+ * @param $text     text to be colored
+ */
 function color_text($color, $text) {
     echo "<td> <font color=\"$color\">$text</font> <br> </td>\n</tr>\n";
 }
-
 
 
 const SHORT_OPTS = '';
@@ -243,7 +245,7 @@ foreach ($src_files as $src_file) {
                 color_text("green", "SUCCESS");
             } else {
                 //fprintf(STDERR, RED . " ... FAIL\n" . TRAIL);
-                color_text("red", "FAIL -- different output");
+                color_text("red", "FAIL -- return codes match but output is different");
             }
         } else {
             //fprintf(STDERR, GREEN . " ... SUCCESS -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL);
