@@ -20,18 +20,20 @@
 ////////////////////////////////////////////////////////////////////////
 
 /**
- * Function replaces all amperants in string to be usable in XML
+ * Function replaces all ampersands in string to be usable in XML
  * @param $string   string 
  */
 function replace_amp($string) {
     return str_replace('&', '&amp;', $string);
 }
 
-
+/**
+ * Class wraps XML generation
+ */
 class XMLCreator {
-    private $ins_cnt;
-    public $DOM;
-    public $root;
+    private $ins_cnt;   // instruction counter
+    public $DOM;        // DOMDocument object
+    public $root;       // root entity in XML -- program
 
     public function __construct() {
         $this->ins_cnt = 0;
@@ -47,6 +49,7 @@ class XMLCreator {
     /**
      * Method adds instruction to XML and returns its handle
      * @param $opcode   opcode of instruction
+     * @return handle of instruction
      */
     public function addInstruction($opcode) {
         $this->ins_cnt++;
@@ -60,10 +63,11 @@ class XMLCreator {
 
     /**
      * Method adds argument to instruction in XML and returns its handle
-     * @param $instructXML  handle of instruciton where argument will be added
+     * @param $instructXML  handle of instruction where argument will be added
      * @param $number       number of argument
      * @param $type         type of argument
      * @param $value        value of argument
+     * @return handle of argument
      */
     public function addArgument($instructXML, $number, $type, $value) {
         $argXML = $this->DOM->createElement('arg'.$number, replace_amp($value));
@@ -74,6 +78,7 @@ class XMLCreator {
 
     /**
      * Method returns XML as string
+     * @return XML formated string
      */
     public function str() {
         return $this->DOM->saveXML();

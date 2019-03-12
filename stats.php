@@ -19,13 +19,16 @@
 ///                             CLASSES                              ///
 ////////////////////////////////////////////////////////////////////////
 
+/**
+ * Class wrapping all statistics about parsed source code
+ */
 class Stats {
-    private $select;
-    private $loc;
-    private $comments;
-    private $labels;
-    private $specific_labels;
-    private $jumps;
+    private $select;            // array which contains order of output string
+    private $loc;               // counter of lines of code
+    private $comments;          // counter of comments
+    private $labels;            // counter of labels
+    private $specific_labels;   // array containing specific labels
+    private $jumps;             // counter of jump instructions
 
     public function __construct($select, $loc=0, $comments=0, $labels=0, $jumps=0) {
         $this->select = $select;
@@ -62,6 +65,7 @@ class Stats {
 
     /**
      * Method returns string of statistics based on selected statistics in select
+     * @return string of statistics
      */
     public function str() {
         $string = '';

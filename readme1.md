@@ -16,11 +16,11 @@ Command line arguments are parsed using php function `getopt` and further handle
 
 ### Lexical and Syntactic Analysis
 
-Script `parse.php` reads given IPPcode19 program from standard input, line by line and checks wether the lines are lexically and syntactically correct. This is done using only regular expressions and PHP 7.3 functions for strings and arrays (no finite state automata or context-free grammar is used). Important part of analysis are constant arrays:
+Script `parse.php` reads given IPPcode19 program from standard input, line by line and checks whether the lines are lexically and syntactically correct. This is done using only regular expressions and PHP 7.3 functions for strings and arrays (no finite state automata or context-free grammar is used). Important part of analysis are constant arrays:
 
-* Constant array `instructions` which contains all instructions (keys) and their correct operand types (values).
+* Constant array `instructions` which contains all opcodes of instructions (keys) and their correct operand types (values).
 * Constant array `operands` which contains operand types (keys) and arrays containing indexes of corresponding regular expressions (values).
-* Constant array `regexes` which contains regular expressions (values).
+* Constant indexed array `regexes` which contains regular expressions (values).
 
 
 Main Processing Loop

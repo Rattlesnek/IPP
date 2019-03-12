@@ -112,10 +112,10 @@ function error($error_string, $ret_code) {
  */
 function help() {
     echo "usage: test.php [--help] [--stats FILE]\n"
-        ."                [--loc, --comments, --labels, --jumps]\n\n"
+        ."                [--loc] [--comments] [--labels] [--jumps]\n\n"
         ."optional arguments:\n"
-        ."  --help          show this help message and exit\n"
-        ."  --stats FILE    output file with collected statistics\n"
+        ."  -h, --help      show this help message and exit\n"
+        ."  --stats FILE    specify output file with collected statistics\n"
         ."  --loc           statistics - count number of lines of code\n"
         ."  --comments      statistics - count number of comments\n"
         ."  --labels        statistics - count number of specific labels\n"
@@ -126,25 +126,22 @@ function help() {
 /**
  * Function handles command line arguments of script for statistics
  * @param $opt  command line arguments
+ * @return handle of file or NULL
  */
 function handle_stat_options($opt) {
-    $keys = array_keys($opt);
-
     if (array_key_exists('stats', $opt)) {
         // open file for statistics
         $stat_file = fopen($opt['stats'], 'w');
         if (! $stat_file) {
             error("ERROR: ".$e."\n", ERR_OUTFILE);
         }
-        $keys = array_diff($keys, ['stats']);
+        return $stat_file;
     } elseif (array_key_exists('loc', $opt) or array_key_exists('comments', $opt) or
               array_key_exists('labels', $opt) or array_key_exists('jumps', $opt)) {
         error("ERROR: argument [--stats FILE] is missing!\n", ERR_PARAM);
-    } else {
-        $keys = array();
     }
 
-    return $keys; // array containing selected statistics
+    return null;
 }
 
 /**
@@ -174,11 +171,11 @@ $opt = getopt(SHORT_OPTS, LONG_OPTS);
 if (array_key_exists('help', $opt) or array_key_exists('h', $opt)) {
     help();
 }
-$keys = handle_stat_options($opt);
+$stat_file = handle_stat_options($opt);
 
 // create XML and statistics
 $XML = new XMLCreator();
-$stats = new Stats($keys);
+$stats = new Stats(array_keys($opt));
 
 // check header .IPPcode19
 $line = fgets(STDIN);
@@ -191,7 +188,7 @@ while ($line = fgets(STDIN)) {
     if (count($comment_parts) > 1) {
         $stats->incComments();
     }
-    // split acording to whitespaces -- opcode + operands
+    // split according to white spaces -- opcode + operands
     $parts = preg_split('/\s+/', trim($comment_parts[0]));
     $opcode = strtoupper(array_shift($parts));
 
@@ -207,7 +204,7 @@ while ($line = fgets(STDIN)) {
 
         $inst_operands = explode(' ', instructions[$opcode]);
         if ($inst_operands[0] == '') {
-            // speciality for instructions that dont have operands - see behaviour of explode()
+            // specialty for instructions that dont have operands - see behavior of explode()
             array_shift($inst_operands);
         }
         // check if number of operands matches
@@ -235,7 +232,7 @@ while ($line = fgets(STDIN)) {
     }
 }
 
-if ($enable_stats) {
+if ($stat_file !== null) {
     // print statistics to file
     fwrite($stat_file, $stats->str());
     fclose($stat_file);

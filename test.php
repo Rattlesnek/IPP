@@ -40,14 +40,24 @@ function error($error_string, $ret_code) {
  * Function prints help and then exits with return code 0
  */
 function help() {
-    echo "HELP\n";   
+    echo "usage: test.php [--help] [--directory DIR] [recursive]\n"
+        ."                [--parse-script SCRIPT] [--int-script SCRIPT]\n"
+        ."                [--parse-only] [--int-only]\n\n"
+        ."optional arguments:\n"
+        ."  -h, --help              show this help message and exit\n"
+        ."  --directory DIR         specify directory with tests (default: current dir)\n"
+        ."  --recursive             search for tests recursively in subdirectories\n"
+        ."  --parse-script SCRIPT   specify path to parser (default: current dir)\n"
+        ."  --int-script SCRIPT     specify path to interpreter (default: current dir)\n"
+        ."  --parse-only            test only parser\n"
+        ."  --int-only              test only interpreter\n";   
     exit(0); 
 }
 
 /**
  * Function creates an empty file
  * @param $filename name of the file
- * @param $write_zerp if true write zero to file else dont
+ * @param $write_zero if true write zero to file else dont
  */
 function create_file($filename, $error=ERR_INFILE, $write_zero=false) {
     $fw = fopen($filename, 'w');
@@ -70,7 +80,7 @@ function color_text($color, $text) {
 }
 
 
-const SHORT_OPTS = '';
+const SHORT_OPTS = 'h';
 const LONG_OPTS = array('help', 'directory:', 'recursive', 'parse-script:', 'int-script:', 'parse-only', 'int-only');
 
 // default values of control variables
@@ -90,7 +100,7 @@ $jexamxml_opt = '/pub/courses/ipp/jexamxml/options';
 //$jexamxml_opt = '../jexamxml/options';
 
 $opt = getopt(SHORT_OPTS, LONG_OPTS);
-if (array_key_exists('help', $opt))
+if (array_key_exists('help', $opt) or array_key_exists('h', $opt))
     help(); 
 if (array_key_exists('directory', $opt))
     $dir = $opt['directory'];
@@ -230,7 +240,7 @@ foreach ($src_files as $src_file) {
     if ($actual_ret_code == $expected_ret_code) {
         // find out if error ocurred during parsing/interpretation
         if ($actual_ret_code == 0) {
-            // check either output XML or ouput from interpreter
+            // check either output XML or output from interpreter
             if ($parse_only) {
                 exec("java -jar $jexamxml $parse_out_file $out_file $diff_file /D $jexamxml_opt", $exec, $diff_code);
                 //fprintf(STDERR, "jexamxml\n");
