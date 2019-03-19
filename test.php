@@ -137,11 +137,11 @@ const HEADER = "<!DOCTYPE html>
 <html>
 <head>
     <meta charset=\"UTF-8\">
-    <title>Page Title</title>
+    <title>Test.php log</title>
 </head>
 <body>
 
-<h1>Test.php</h1>
+<h1>Test.php log</h1>
 ";
 
 const TABLE = "
