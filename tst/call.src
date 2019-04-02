@@ -1,0 +1,58 @@
+.IPPcode19
+
+
+JUMP endfun
+LABEL fun
+    PUSHFRAME
+    
+    WRITE string@fun\010
+    WRITE LF@counter
+    WRITE string@\010
+
+
+    JUMPIFEQ end_recursion LF@counter int@0
+
+        CREATEFRAME
+        DEFVAR TF@counter
+        SUB TF@counter LF@counter int@1
+        CALL fun
+
+    LABEL end_recursion
+
+    BREAK
+
+    WRITE string@back\010
+    WRITE LF@counter
+    WRITE string@\010
+
+    PUSHS LF@counter
+
+    POPFRAME
+RETURN
+LABEL endfun
+
+
+JUMP endbaz
+LABEL baz
+
+    WRITE string@baz\010
+
+    CREATEFRAME
+    DEFVAR TF@counter
+    MOVE TF@counter int@5
+    CALL fun
+
+    DEFVAR GF@ret_val
+    POPS GF@ret_val
+
+RETURN 
+LABEL endbaz
+
+
+
+CALL baz
+WRITE string@final_return\010
+WRITE GF@ret_val
+
+
+

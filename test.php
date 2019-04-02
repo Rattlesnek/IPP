@@ -217,9 +217,10 @@ foreach ($src_files as $src_file) {
     $expected_ret_code = (int) trim(fgets($fr));
     fclose($fr);
 
-    //fprintf(STDERR, "call: $src_file\n");
+    ////fprintf(STDERR, "call: $src_file\n");
     $call = str_replace($dir, "", $nosuffix_file);
     echo "<tr>\n<td>$call</td>\n";
+    //fprintf(STDERR, YELLOW . "$call\n" . TRAIL);
 
     if (! $int_only) {
         // PARSE execute
@@ -243,12 +244,12 @@ foreach ($src_files as $src_file) {
             // check either output XML or output from interpreter
             if ($parse_only) {
                 exec("java -jar $jexamxml $parse_out_file $out_file $diff_file /D $jexamxml_opt", $exec, $diff_code);
-                //fprintf(STDERR, "jexamxml\n");
+                ////fprintf(STDERR, "jexamxml\n");
             } else {
                 exec("diff $int_out_file $out_file >$diff_file", $exec, $diff_code);
-                //fprintf(STDERR, "diff\n");
+                ////fprintf(STDERR, "diff\n");
             }
-            
+            ////fprintf(STDERR, "diff code: $diff_code\n");
             // according to return value print success or fail
             if ($diff_code == 0) {
                 //fprintf(STDERR, GREEN . " ... SUCCESS -- expected: $expected_ret_code got: $actual_ret_code\n" . TRAIL);
@@ -280,6 +281,6 @@ echo ENDING;
 
 unlink($diff_file);
 
-fprintf(STDERR, "Testing finished!\n");
+//fprintf(STDERR, "Testing finished!\n");
 
 ?>

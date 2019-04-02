@@ -1,0 +1,7 @@
+.IPPcode19
+
+WRITE string@ok
+
+EXIT int@10
+
+WRITE string@bad

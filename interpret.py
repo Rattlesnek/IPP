@@ -2,41 +2,49 @@ import sys
 import os.path
 import argparse
 import intermachine
+import instruc
+import error
 
-
-ERR_PARAM = 10
-ERR_INFILE = 11
-ERR_OUTFILE = 12
-ERR_XML_FORMAT = 31
-ERR_XML_STRUCT = 32
-
-ERR_SEMANTIC = 52
-ERR_TYPE = 53
-ERR_UNDEF_VAR = 54
-ERR_NO_FRAME = 55
-ERR_MISS_VAL = 56
-ERR_OPERAND_VAL = 57
-ERR_STRING = 58
-
-ERR_INTER = 99 
-
-
+def err_exit(text, err, return_value):
+    """ERR EXIT"""
+    print('ERROR:', text, err, file=sys.stderr)
+    sys.exit(return_value)
 
 
 def main(src, inp):
-
-    parser = intermachine.Parser(src)
-    program = parser.parse_XML(debug=True)
-
-    print(program.labels)
-
-    interpreter = intermachine.Interpreter(program)
-    interpreter.interpret(inp)
+    try:
+        parser = intermachine.Parser(src)
+        program = parser.parse_XML(debug=False)
+    except error.XMLFormatError_31 as err:
+        err_exit('XML Format Error', err, error.ERR_XML_FORMAT)
+    except error.XMLStructError_32 as err:
+        err_exit('XML Struct Error', err, error.ERR_XML_STRUCT)
+    except error.SemanticError_52 as err:
+        err_exit('XML Semantic Error', err, error.ERR_SEMANTIC)
+    
+    try:
+        interpreter = intermachine.Interpreter(program)
+        interpreter.interpret(inp)
+    except error.XMLStructError_32 as err:
+        err_exit('XML Struct Error', err, error.ERR_XML_STRUCT)  
+    except error.SemanticError_52 as err:
+        err_exit('XML Semantic Error', err, error.ERR_SEMANTIC)
+    except error.OperandTypeError_53 as err:
+        err_exit('invalid type of operand', err, error.ERR_OPERAND_TYPE)
+    except error.VarDefineError_54 as err:
+        err_exit('variable does not exist', err, error.ERR_DEF_VAR)
+    except error.FrameError_55 as err:
+        err_exit('frame does not exist', err, error.ERR_FRAME)
+    except error.MissingValueError_56 as err:
+        err_exit('missing value', err, error.ERR_MISS_VAL)
+    except error.OperandValueError_57 as err:
+        err_exit('invalud value of operand', err, error.ERR_OPERAND_VAL)
+    except error.StringError_58 as err:
+        err_exit('invalid string operation', err, error.ERR_STRING)
+    except instruc.ExitInterpret as return_value:
+        sys.exit(int(str(return_value)))
             
     
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', help='file with XML representation of source code')
@@ -45,7 +53,7 @@ if __name__ == "__main__":
     
     if not (args.source or args.input):
         print('ERROR: Need to specify at least one of the arguments: --source / --input')
-        sys.exit(ERR_PARAM)
+        sys.exit(error.ERR_PARAM)
 
     source, inputt = None, None 
     if args.source:
@@ -65,6 +73,6 @@ if __name__ == "__main__":
                 main(sys.stdin, inp)
     except FileNotFoundError as err:
         print('ERROR:', err, file=sys.stderr)
-        sys.exit(ERR_INFILE)
+        sys.exit(error.ERR_INFILE)
     
     

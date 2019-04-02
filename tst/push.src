@@ -1,0 +1,23 @@
+.IPPcode19
+
+DEFVAR GF@x
+MOVE GF@x bool@false
+
+PUSHS GF@x
+PUSHS int@1
+PUSHS int@2
+PUSHS int@3
+
+POPS GF@x
+WRITE GF@x
+
+POPS GF@x
+WRITE GF@x
+
+POPS GF@x
+WRITE GF@x
+
+POPS GF@x
+WRITE GF@x
+
+

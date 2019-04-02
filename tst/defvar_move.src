@@ -1,0 +1,29 @@
+.IPPcode19
+
+CREATEFRAME
+DEFVAR TF@a
+MOVE TF@a string@variable\032ok
+
+WRITE TF@a 
+WRITE string@\010
+
+PUSHFRAME
+
+DEFVAR LF@x
+MOVE LF@x bool@true
+WRITE LF@x
+WRITE string@\010
+
+
+
+WRITE LF@a
+WRITE string@\010
+
+DEFVAR GF@x
+MOVE GF@x int@12
+
+WRITE GF@x
+WRITE string@\010
+
+
+

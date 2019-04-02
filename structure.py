@@ -1,30 +1,41 @@
-
-
-class StructureError(Exception): pass
+import re
+import error
 
 class Operand:
 
-    def __init__(self, category, value):
-        self.category = category
+    def __init__(self, typ, value):
+        self.type = typ
         self.value = value
 
     def __str__(self):
-        return self.category + ';' +  self.value
+        return self.type + ';' +  self.value
 
     def __repr__(self):
-        return self.category + ';' +  self.value
+        return self.type + ';' +  self.value
+
+    def return_operand_factory(self, typ):
+        try:
+            categories = {
+                'var'      : self.variable,
+                'bool'      : self.boolean,
+                'int'       : self.integer,
+                'string'    : self.string,
+                'nil'       : self.nil,
+                'type'      : self.type_of,
+                'label'     : self.label
+            }
+            return categories[typ]
+        except KeyError:
+            raise error.ArgumentError_32(self.__str__())
 
     def apply_type(self):
         """Applies type of operand and returns operand with correct type"""
-        return Operand.categories[self.category](self)
+        factory = self.return_operand_factory(self.type)
+        return factory()
     
     def variable(self):
         """Creates Variable and returns it"""
-        try:
-            parts = self.value.split('@', 2)
-            return Variable(*parts)
-        except TypeError:
-            raise StructureError
+        return Variable(self.value) # error.StructureError_32 if fail
 
     def boolean(self):
         """Creates bool and returns it"""
@@ -33,49 +44,52 @@ class Operand:
         elif self.value == 'false':
             return False
         else:
-            raise StructureError
+            raise error.StructureError_32(self.value)
 
     def integer(self):
         """Creates int and returns it"""
         try:
             return int(self.value)
         except ValueError:
-            raise StructureError
+            raise error.StructureError_32(self.value)
 
     def string(self):
         """Creates str and returns it"""
-        return str(self.value)
-        # TODO
+        if self.value is None:
+            self.value = ''
+        if re.match(r'^(\\[0-9]{3}|[^\\#\s])*$', self.value) is None: # TODO
+            raise error.StructureError_32(self.value)
+
+        escape = re.findall(r'\\[0-9]{3}', self.value)
+        not_escape = re.split(r'\\[0-9]{3}', self.value)
+
+        final_string = ''
+        for not_esc, esc in zip(not_escape, escape):
+            final_string += not_esc + chr(int(esc[1:]))
+        final_string += not_escape[-1]
+
+        return str(final_string)
 
     def nil(self):
         """Creates Nil and returns it"""
-        return Nil()
+        return Nil(self.value) # error.StructureError_32 if fail
 
     def type_of(self):
         """Creates Type and returns it"""
-        return Type(self.value)
+        return Type(self.value) # error.StructureError_32 if fail
 
     def label(self):
         """Creates Label and returns it"""
-        return Label(self.value)
+        return Label(self.value) # error.StructureError_32 if fail
 
-    categories = {
-        'var'       : variable,
-        'bool'      : boolean,
-        'int'       : integer,
-        'string'    : string,
-        'nil'       : nil,
-        'type'      : type_of,
-        'label'     : label
-    }
 
 
 class Variable:
-    frames = {'LF', 'TF', 'GF'}
 
-    def __init__(self, frame, name):
-        if frame not in Variable.frames:
-            raise StructureError
+    def __init__(self, variable):
+        if re.match(r'^((GF|TF|LF)@[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*)$', variable) is None:
+            raise error.StructureError_32(variable)
+        frame, name = variable.split('@', 2)
         self.frame = frame
         self.name = name
 
@@ -88,23 +102,27 @@ class Variable:
 
 
 class Type:
-    types = {'int', 'bool', 'string'}
 
     def __init__(self, typ):
-        if typ not in Type.types:
-            raise StructureError 
-        self.type = typ
+        if typ not in {'int', 'bool', 'string'}:
+            raise error.StructureError_32(typ) 
+        self._type = typ
   
     def __str__(self):
-        return '[Type ' + self.type + ']'
+        return '[Type ' + self._type + ']'
 
     def __repr__(self):
-        return '[Type ' + self.type + ']'
+        return '[Type ' + self._type + ']'
+
+    def __eq__(self, other):
+        return self._type == other._type
 
 
 class Label:
 
     def __init__(self, name):
+        if re.match(r'^([a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*)$', name) is None:
+            raise error.StructureError_32(name)
         self.name = name
 
     def __str__(self):
@@ -120,19 +138,23 @@ class Label:
         return hash(self.name)
 
 
+
 class Nil:
 
-    def __init__(self):
-        self.nil = 'nil'
-        # TODO
+    def __init__(self, text):
+        if text != 'nil':
+            raise error.StructureError_32(text)
+        self._nil = None
     
     def __str__(self):
-        return '[Nil ' + self.nil + ']'
+        return ''
 
     def __repr__(self):
-        return '[Nil ' + self.nil + ']'
+        return '[Nil nil]'
 
     def __eq__(self, other):
-        return self.nil == other.nil
-
+        try:
+            return self._nil == other._nil
+        except AttributeError:
+            return False
     

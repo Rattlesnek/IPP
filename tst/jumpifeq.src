@@ -1,0 +1,18 @@
+.IPPcode19
+
+
+DEFVAR GF@x
+DEFVAR GF@y
+
+MOVE GF@x int@1
+MOVE GF@y nil@nil
+
+JUMPIFEQ lab GF@x GF@y
+    WRITE string@not\032jumped\010
+
+JUMP end
+LABEL lab
+    WRITE string@jumped\010
+
+LABEL end
+
