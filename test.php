@@ -233,7 +233,7 @@ foreach ($src_files as $src_file) {
 
     if (! $parse_only) {
         // INTERPRET execute
-        exec("python $int_script --input=$in_file <$int_src_file >$int_out_file 2>/dev/null", $exec, $int_ret_code);
+        exec("python3 $int_script --input=$in_file <$int_src_file >$int_out_file 2>/dev/null", $exec, $int_ret_code);
         $actual_ret_code = $int_ret_code;
     }
 
