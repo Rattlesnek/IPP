@@ -1,3 +1,14 @@
+"""
+    Interpreter of IPPcode19 - FIT VUT
+    
+    File:   intermachine.py
+    
+    Author: Adam Pankuch
+    
+    Login:  xpanku00
+    
+    Date:   7.4.2019
+"""
 import xml.etree.ElementTree as ElementTree
 import structure as struc
 import instruc as inst
@@ -6,12 +17,19 @@ import error
 
 
 class Program:
+    """
+    Class representing a single program consisting of Instruction objects
+
+    Raises:
+        error.LabelError_52
+    """
 
     def __init__(self):
         self.instructions = []
         self.labels = {}
 
     def append_instruction(self, instruction):
+        """ Append instruction to the program """
         self.instructions.append(instruction)
         try:
             if instruction.opcode == 'LABEL':
@@ -20,6 +38,7 @@ class Program:
             raise error.LabelError_52(instruction)
 
     def add_label(self, label, index):
+        """ Add label to dict of labels with its location in program """
         if label in self.labels:
             raise error.LabelError_52(label)
         self.labels[label] = index
@@ -29,6 +48,14 @@ class Program:
 
 
 class Parser:
+    """
+    Class representing the IPPcode19 parser
+    able to parse source XML and return Program object
+    
+    Raises:
+        error.XMLFormatError_31
+        error.XMLStructError_32 
+    """
 
     def __init__(self, src):
         try:
@@ -37,8 +64,8 @@ class Parser:
         except ElementTree.ParseError:
             raise error.XMLFormatError_31      
 
-
     def get_operands(self, inst_XML):
+        """ Get operands of a single instruction """
         operands = []
         for j in range(1, 4):
             arg_XML = inst_XML.find('arg' + str(j))
@@ -53,13 +80,13 @@ class Parser:
             raise error.XMLStructError_32
         return operands
 
-
     def parse_XML(self, debug=False):
+        """ Parse source XML """
         program = Program()
         i = 0
         while True:
             i += 1
-            # find songle element which hast tag: instruction and attribute order: number of inst
+            # find single element which hast tag: instruction and attribute order: number of inst
             inst_XML = self.root.find("./instruction[@order='{}']".format(i))
             if inst_XML is None:
                 break
@@ -83,6 +110,13 @@ class Parser:
 
 
 class Interpreter:
+    """
+    Class representing the IPPcode19 interpreter
+    able to interpret a program given as parameter
+    
+    Raises:
+        error.LabelError_52
+    """
 
     def __init__(self, program):
         self.program = program
@@ -91,7 +125,7 @@ class Interpreter:
         self.call_stack = data.CallStack()
 
     def interpret(self, inp):
-        """MAIN INTERPRET LOOP"""
+        """ Interpret a program - MAIN INTERPRETATION LOOP """
         self.inst_pointer = 0
         while self.inst_pointer < len(self.program.instructions):
             instruction = self.program.instructions[self.inst_pointer]
@@ -102,7 +136,7 @@ class Interpreter:
             self.inst_pointer += 1 
 
     def wormhole(self, call, ret, label):
-        """Handles jumps and calls, returns + allows recursion"""
+        """ Handles jumps and calls, returns + allows recursion """
         try:
             if call == False and ret == False:
                 # classic jump

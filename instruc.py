@@ -1,12 +1,40 @@
+"""
+    Interpreter of IPPcode19 - FIT VUT
+    
+    File:   instruc.py
+    
+    Author: Adam Pankuch
+    
+    Login:  xpanku00
+    
+    Date:   7.4.2019
+"""
 import sys
 import structure as struc
 import data
 import error
 
+
 # EXIT Exception
-class ExitInterpret(Exception): pass # EXIT
+class ExitInterpret(Exception): pass
+
 
 class Instruction:
+    """
+    Class representing instruction
+    able to execute given instruction
+    
+    Raises:
+        error.InstructionError_32 
+        error.XMLStructError_32
+        error.OperandTypeError_53
+        error.OperandValueError_57
+        error.InterpretZeroDivError_57
+        error.StringError_58
+
+        ExitInterpret
+    """
+
     # allowed types for symb function arguments
     symb = {int, bool, str, struc.Variable, struc.Nil}
 
@@ -16,6 +44,7 @@ class Instruction:
         self.operands = operands or []
 
     def return_instruction(self, opcode):
+        """ Returns function able to execute given instruction """
         try:
             instructions = {
                 'MOVE'          : (self.move_f, None),
@@ -63,16 +92,14 @@ class Instruction:
     ######################################################################
     
     def execute(self, frame_sel, inp):
-        """Executes instruction with operands in self.operands"""
+        """ Executes instruction with FrameSelect -- frame_sel and user input file handle -- inp """
         try:
             if (self.opcode == 'READ'):
                 return self.func(frame_sel, inp, *self.operands)
             else:
                 return self.func(frame_sel, *self.operands)
 
-            #
-            # TODO ako je to s nespravnym poctom paramterov
-            #
+            # TODO
 
         except TypeError:   # invalid number of arguments
             raise error.XMLStructError_32(self.__str__())
@@ -92,6 +119,7 @@ class Instruction:
     #######################################################################
     
     def get_type_values(self, frame_sel, type1, symb1, type2, symb2):
+        """ Get values of given types (only if pairs type1 of symb1 and type2 of symb2 match) """
         type1 = [type1] if type(type1) is not list else type1
         type2 = [type2] if type(type2) is not list else type2
 
@@ -144,7 +172,6 @@ class Instruction:
         
         value = frame_sel.get_value(symb1) if type(symb1) is struc.Variable else symb1
         frame_sel.pushs(value)
-
 
     def pops_f(self, frame_sel, var):
         assert type(var) is struc.Variable
@@ -244,6 +271,7 @@ class Instruction:
     #######################################################################
 
     def input(self, inp):
+        """ Simulate how input() function behaves """
         user_input = inp.readline()
         return user_input if user_input == '' or user_input[-1] != '\n' else user_input[:-1]
 
@@ -337,7 +365,6 @@ class Instruction:
 
     def label_f(self, frame_sel, label):
         assert type(label) is struc.Label
-        ...
 
     def jump_f(self, frame_sel, label):
         assert type(label) is struc.Label
@@ -379,3 +406,4 @@ class Instruction:
     def break_f(self, frame_sel):
         print('Number of executed instructions: n/a\n', file=sys.stderr) # TODO number of instruct
         print(str(frame_sel), file=sys.stderr, end='')
+        

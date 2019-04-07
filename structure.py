@@ -1,7 +1,26 @@
+"""
+    Interpreter of IPPcode19 - FIT VUT
+    
+    File:   structure.py
+    
+    Author: Adam Pankuch
+    
+    Login:  xpanku00
+    
+    Date:   7.4.2019
+"""
 import re
 import error
 
+
 class Operand:
+    """
+    Class representing factory of operand types
+    
+    Raises:
+        error.ArgumentError_32
+        error.StructureError_32
+    """
 
     def __init__(self, typ, value):
         self.type = typ
@@ -14,9 +33,10 @@ class Operand:
         return self.type + ';' +  self.value
 
     def return_operand_factory(self, typ):
+        """ Return function able to create operand type """
         try:
             categories = {
-                'var'      : self.variable,
+                'var'       : self.variable,
                 'bool'      : self.boolean,
                 'int'       : self.integer,
                 'string'    : self.string,
@@ -29,16 +49,16 @@ class Operand:
             raise error.ArgumentError_32(self.__str__())
 
     def apply_type(self):
-        """Applies type of operand and returns operand with correct type"""
+        """ Applies type of operand and returns operand with correct type """
         factory = self.return_operand_factory(self.type)
         return factory()
     
     def variable(self):
-        """Creates Variable and returns it"""
+        """ Creates Variable and returns it """
         return Variable(self.value) # error.StructureError_32 if fail
 
     def boolean(self):
-        """Creates bool and returns it"""
+        """ Creates bool and returns it """
         if self.value == 'true':
             return True
         elif self.value == 'false':
@@ -47,14 +67,14 @@ class Operand:
             raise error.StructureError_32(self.value)
 
     def integer(self):
-        """Creates int and returns it"""
+        """ Creates int and returns it """
         try:
             return int(self.value)
         except ValueError:
             raise error.StructureError_32(self.value)
 
     def string(self):
-        """Creates str and returns it"""
+        """ Creates str and returns it """
         if self.value is None:
             self.value = ''
         if re.match(r'^(\\[0-9]{3}|[^\\#\s])*$', self.value) is None: # TODO
@@ -71,20 +91,26 @@ class Operand:
         return str(final_string)
 
     def nil(self):
-        """Creates Nil and returns it"""
+        """ Creates Nil and returns it """
         return Nil(self.value) # error.StructureError_32 if fail
 
     def type_of(self):
-        """Creates Type and returns it"""
+        """ Creates Type and returns it """
         return Type(self.value) # error.StructureError_32 if fail
 
     def label(self):
-        """Creates Label and returns it"""
+        """ Creates Label and returns it """
         return Label(self.value) # error.StructureError_32 if fail
 
 
 
 class Variable:
+    """
+    Class representing a variable
+    
+    Raises:
+        error.StructureError_32
+    """
 
     def __init__(self, variable):
         if re.match(r'^((GF|TF|LF)@[a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*)$', variable) is None:
@@ -100,8 +126,13 @@ class Variable:
         return '[Var {} {}]'.format(self.frame, self.name)
 
 
-
 class Type:
+    """
+    Class representing type "type"
+    
+    Raises:
+        error.StructureError_32
+    """
 
     def __init__(self, typ):
         if typ not in {'int', 'bool', 'string'}:
@@ -119,27 +150,38 @@ class Type:
 
 
 class Label:
+    """
+    Class representing type label
+    
+    Raises:
+        error.StructureError_32
+    """
 
     def __init__(self, name):
         if re.match(r'^([a-zA-Z_\-$&%*!?][a-zA-Z0-9_\-$&%*!?]*)$', name) is None:
             raise error.StructureError_32(name)
-        self.name = name
+        self._name = name
 
     def __str__(self):
-        return '[Label ' + self.name + ']'
+        return '[Label ' + self._name + ']'
 
     def __repr__(self):
-        return '[Label ' + self.name + ']'
+        return '[Label ' + self._name + ']'
 
     def __eq__(self, other):
-        return self.name == other.name
+        return self._name == other._name
 
     def __hash__(self):
-        return hash(self.name)
-
+        return hash(self._name)
 
 
 class Nil:
+    """
+    Class representing type nil
+    
+    Raises:
+        error.StructureError_32
+    """
 
     def __init__(self, text):
         if text != 'nil':

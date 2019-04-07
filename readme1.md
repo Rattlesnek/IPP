@@ -37,7 +37,6 @@ Main Processing Loop
 10. Continue with point 1.
 
 
-
 ### Generation of XML
 
 XML representation of the analysed IPPcode19 program is generated using PHP extension `DOMDocument`. To further simplify the generation of XML the class `XMLCreator` (see file `gen_xml.php`) is used. This class allows us to create new XML document, add instructions to the document, add arguments 
