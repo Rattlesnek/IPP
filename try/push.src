@@ -8,6 +8,8 @@ PUSHS int@1
 PUSHS int@2
 PUSHS int@3
 
+BREAK
+
 POPS GF@x
 WRITE GF@x
 

@@ -58,8 +58,7 @@ class FrameError_55(Exception): pass
 
 # 56
 class MissingValueError_56(Exception): pass
-class CallStackError_56(MissingValueError_56): pass
-class DataStackError_56(MissingValueError_56): pass
+class StackError_56(MissingValueError_56): pass
 class VariableMissingValueError_56(MissingValueError_56): pass
 
 # 57

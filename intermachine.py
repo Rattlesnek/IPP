@@ -122,7 +122,7 @@ class Interpreter:
         self.program = program
         self.inst_pointer = 0
         self.frame_sel = data.FrameSelect()
-        self.call_stack = data.CallStack()
+        self.call_stack = data.Stack()
 
     def interpret(self, inp):
         """ Interpret a program - MAIN INTERPRETATION LOOP """

@@ -140,7 +140,7 @@ class FrameSelect:
         self.global_frame = Frame('GF')
         self.temporary_frame = None
         self.local_stack = FrameStack()
-        self.data_stack = []
+        self.data_stack = Stack()
 
     def str_data_stack(self):
         """ Return content of data stack as string for debugging """
@@ -213,33 +213,36 @@ class FrameSelect:
 
     def pushs(self, value):
         """ Pushs value to the data stack """
-        self.data_stack.append(value)
+        self.data_stack.push(value)
 
     def pops(self):
         """ Pops value from the data stack """
-        if len(self.data_stack) == 0:
-            raise error.DataStackError_56
         return self.data_stack.pop()
     
 
-class CallStack:
+class Stack:
     """
-    Class representing a stack of function calls
+    Class representing a stack 
+    either of function calls or data stack
     
     Raises:
-        error.CallStackError_56
+        error.StackError_56
     """
 
     def __init__(self):
         self.stack = []
 
-    def push(self, inst_pointer):
+    def push(self, value):
         """ Pushes current instruction pointer to the call stack """
-        self.stack.append(inst_pointer)
+        self.stack.append(value)
     
     def pop(self):
         """ Pops instruction pointer from the top of the stack """
         if len(self.stack) == 0:
-            raise error.CallStackError_56
+            raise error.StackError_56
         return self.stack.pop()
+
+    def __iter__(self):
+        return iter(self.stack)
+
         
